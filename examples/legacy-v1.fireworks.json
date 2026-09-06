@@ -1,0 +1,159 @@
+{
+  "formatVersion": "star-studio/1",
+  "modelVersion": "visual-star/1",
+  "tickRate": 120,
+  "name": "첫 번째 공연",
+  "stars": {
+    "star-amber": {
+      "id": "star-amber",
+      "name": "앰버 스타",
+      "body": {
+        "form": "sphere",
+        "scale": 1
+      },
+      "material": {
+        "base": "amber",
+        "finish": "silver",
+        "transition": 0.78,
+        "trail": 1
+      }
+    },
+    "star-ruby": {
+      "id": "star-ruby",
+      "name": "루비 스타",
+      "body": {
+        "form": "sphere",
+        "scale": 1
+      },
+      "material": {
+        "base": "ruby",
+        "finish": null,
+        "transition": 0.75,
+        "trail": 0.9
+      }
+    },
+    "star-silver": {
+      "id": "star-silver",
+      "name": "실버 스타",
+      "body": {
+        "form": "sphere",
+        "scale": 0.9
+      },
+      "material": {
+        "base": "silver",
+        "finish": "azure",
+        "transition": 0.7,
+        "trail": 1
+      }
+    }
+  },
+  "effects": {
+    "effect-peony": {
+      "id": "effect-peony",
+      "name": "모란형",
+      "pattern": "peony",
+      "starId": "star-ruby",
+      "count": 240,
+      "spread": 1,
+      "rotation": 0,
+      "seed": "peony"
+    },
+    "effect-chrysanthemum": {
+      "id": "effect-chrysanthemum",
+      "name": "국화형",
+      "pattern": "chrysanthemum",
+      "starId": "star-amber",
+      "count": 200,
+      "spread": 1,
+      "rotation": 0,
+      "seed": "chrysanthemum"
+    },
+    "effect-willow": {
+      "id": "effect-willow",
+      "name": "버드나무형",
+      "pattern": "willow",
+      "starId": "star-amber",
+      "count": 132,
+      "spread": 1,
+      "rotation": 0,
+      "seed": "willow"
+    },
+    "effect-ring": {
+      "id": "effect-ring",
+      "name": "고리형",
+      "pattern": "ring",
+      "starId": "star-silver",
+      "count": 128,
+      "spread": 1,
+      "rotation": 0,
+      "seed": "ring"
+    },
+    "effect-crossette": {
+      "id": "effect-crossette",
+      "name": "십자 분기형",
+      "pattern": "crossette",
+      "starId": "star-amber",
+      "count": 8,
+      "spread": 1,
+      "rotation": 0,
+      "seed": "crossette"
+    }
+  },
+  "launchers": {
+    "left": {
+      "id": "left",
+      "name": "왼쪽",
+      "x": -0.75,
+      "z": 0
+    },
+    "center": {
+      "id": "center",
+      "name": "가운데",
+      "x": 0,
+      "z": 0
+    },
+    "right": {
+      "id": "right",
+      "name": "오른쪽",
+      "x": 0.75,
+      "z": 0
+    }
+  },
+  "cues": {
+    "cue-peony": {
+      "id": "cue-peony",
+      "effectId": "effect-peony",
+      "launcherId": "left",
+      "atTick": 120,
+      "seed": "opening"
+    },
+    "cue-chrysanthemum": {
+      "id": "cue-chrysanthemum",
+      "effectId": "effect-chrysanthemum",
+      "launcherId": "center",
+      "atTick": 600,
+      "seed": "bloom"
+    },
+    "cue-willow": {
+      "id": "cue-willow",
+      "effectId": "effect-willow",
+      "launcherId": "right",
+      "atTick": 960,
+      "seed": "falling"
+    },
+    "cue-ring": {
+      "id": "cue-ring",
+      "effectId": "effect-ring",
+      "launcherId": "left",
+      "atTick": 1320,
+      "seed": "circle"
+    },
+    "cue-crossette": {
+      "id": "cue-crossette",
+      "effectId": "effect-crossette",
+      "launcherId": "right",
+      "atTick": 1800,
+      "seed": "branches"
+    }
+  }
+}

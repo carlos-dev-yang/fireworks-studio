@@ -1,0 +1,440 @@
+{
+  "formatVersion": "star-studio/2",
+  "modelVersion": "visual-star/2",
+  "tickRate": 120,
+  "name": "한밤의 빛",
+  "fireworks": {
+    "firework-chrysanthemum": {
+      "id": "firework-chrysanthemum",
+      "name": "01 · 국화",
+      "design": {
+        "flight": {
+          "height": 200,
+          "riseSeconds": 1.65
+        },
+        "layers": [
+          {
+            "id": "layer-main",
+            "name": "국화",
+            "enabled": true,
+            "pattern": "chrysanthemum",
+            "star": {
+              "body": {
+                "form": "sphere",
+                "scale": 1
+              },
+              "material": {
+                "base": "amber",
+                "finish": "silver",
+                "transition": 0.78,
+                "trail": 1
+              },
+              "lifetimeScale": 1,
+              "brightness": 1
+            },
+            "count": 200,
+            "spread": 1,
+            "rotation": 0,
+            "delaySeconds": 0,
+            "burstStrength": 3.2,
+            "burstSeconds": 0.16,
+            "dragScale": 1.15,
+            "seed": "layer-main"
+          }
+        ]
+      }
+    },
+    "firework-peony": {
+      "id": "firework-peony",
+      "name": "02 · 피오니",
+      "design": {
+        "flight": {
+          "height": 200,
+          "riseSeconds": 1.65
+        },
+        "layers": [
+          {
+            "id": "layer-main",
+            "name": "피오니",
+            "enabled": true,
+            "pattern": "peony",
+            "star": {
+              "body": {
+                "form": "sphere",
+                "scale": 1
+              },
+              "material": {
+                "base": "ruby",
+                "finish": null,
+                "transition": 0.75,
+                "trail": 0.9
+              },
+              "lifetimeScale": 1,
+              "brightness": 1
+            },
+            "count": 240,
+            "spread": 1,
+            "rotation": 0,
+            "delaySeconds": 0,
+            "burstStrength": 3.2,
+            "burstSeconds": 0.16,
+            "dragScale": 1.15,
+            "seed": "layer-main"
+          }
+        ]
+      }
+    },
+    "firework-willow": {
+      "id": "firework-willow",
+      "name": "03 · 버드나무",
+      "design": {
+        "flight": {
+          "height": 200,
+          "riseSeconds": 1.65
+        },
+        "layers": [
+          {
+            "id": "layer-main",
+            "name": "버드나무",
+            "enabled": true,
+            "pattern": "willow",
+            "star": {
+              "body": {
+                "form": "sphere",
+                "scale": 1
+              },
+              "material": {
+                "base": "amber",
+                "finish": "silver",
+                "transition": 0.78,
+                "trail": 1
+              },
+              "lifetimeScale": 1,
+              "brightness": 1
+            },
+            "count": 132,
+            "spread": 1,
+            "rotation": 0,
+            "delaySeconds": 0,
+            "burstStrength": 3.2,
+            "burstSeconds": 0.16,
+            "dragScale": 1.15,
+            "seed": "layer-main"
+          }
+        ]
+      }
+    },
+    "firework-ring": {
+      "id": "firework-ring",
+      "name": "04 · 링",
+      "design": {
+        "flight": {
+          "height": 200,
+          "riseSeconds": 1.65
+        },
+        "layers": [
+          {
+            "id": "layer-main",
+            "name": "링",
+            "enabled": true,
+            "pattern": "ring",
+            "star": {
+              "body": {
+                "form": "sphere",
+                "scale": 0.9
+              },
+              "material": {
+                "base": "silver",
+                "finish": "azure",
+                "transition": 0.7,
+                "trail": 1
+              },
+              "lifetimeScale": 1,
+              "brightness": 1
+            },
+            "count": 128,
+            "spread": 1,
+            "rotation": 0,
+            "delaySeconds": 0,
+            "burstStrength": 3.2,
+            "burstSeconds": 0.16,
+            "dragScale": 1.15,
+            "seed": "layer-main"
+          }
+        ]
+      }
+    },
+    "firework-crossette": {
+      "id": "firework-crossette",
+      "name": "05 · 크로셋",
+      "design": {
+        "flight": {
+          "height": 200,
+          "riseSeconds": 1.65
+        },
+        "layers": [
+          {
+            "id": "layer-main",
+            "name": "크로셋",
+            "enabled": true,
+            "pattern": "crossette",
+            "star": {
+              "body": {
+                "form": "sphere",
+                "scale": 1
+              },
+              "material": {
+                "base": "amber",
+                "finish": "silver",
+                "transition": 0.78,
+                "trail": 1
+              },
+              "lifetimeScale": 1,
+              "brightness": 1
+            },
+            "count": 8,
+            "spread": 1,
+            "rotation": 0,
+            "delaySeconds": 0,
+            "burstStrength": 3.2,
+            "burstSeconds": 0.16,
+            "dragScale": 1.15,
+            "seed": "layer-main"
+          }
+        ]
+      }
+    }
+  },
+  "launchers": {
+    "left": {
+      "id": "left",
+      "name": "발사대 1",
+      "x": -0.65,
+      "z": 0
+    },
+    "center": {
+      "id": "center",
+      "name": "발사대 2",
+      "x": 0,
+      "z": 0
+    },
+    "right": {
+      "id": "right",
+      "name": "발사대 3",
+      "x": 0.65,
+      "z": 0
+    }
+  },
+  "cues": {
+    "cue-peony": {
+      "id": "cue-peony",
+      "name": "02 · 피오니",
+      "launcherId": "left",
+      "atTick": 120,
+      "design": {
+        "flight": {
+          "height": 200,
+          "riseSeconds": 1.65
+        },
+        "layers": [
+          {
+            "id": "layer-main",
+            "name": "피오니",
+            "enabled": true,
+            "pattern": "peony",
+            "star": {
+              "body": {
+                "form": "sphere",
+                "scale": 1
+              },
+              "material": {
+                "base": "ruby",
+                "finish": null,
+                "transition": 0.75,
+                "trail": 0.9
+              },
+              "lifetimeScale": 1,
+              "brightness": 1
+            },
+            "count": 240,
+            "spread": 1,
+            "rotation": 0,
+            "delaySeconds": 0,
+            "burstStrength": 3.2,
+            "burstSeconds": 0.16,
+            "dragScale": 1.15,
+            "seed": "layer-main"
+          }
+        ]
+      }
+    },
+    "cue-chrysanthemum": {
+      "id": "cue-chrysanthemum",
+      "name": "01 · 국화",
+      "launcherId": "center",
+      "atTick": 480,
+      "design": {
+        "flight": {
+          "height": 200,
+          "riseSeconds": 1.65
+        },
+        "layers": [
+          {
+            "id": "layer-main",
+            "name": "국화",
+            "enabled": true,
+            "pattern": "chrysanthemum",
+            "star": {
+              "body": {
+                "form": "sphere",
+                "scale": 1
+              },
+              "material": {
+                "base": "amber",
+                "finish": "silver",
+                "transition": 0.78,
+                "trail": 1
+              },
+              "lifetimeScale": 1,
+              "brightness": 1
+            },
+            "count": 200,
+            "spread": 1,
+            "rotation": 0,
+            "delaySeconds": 0,
+            "burstStrength": 3.2,
+            "burstSeconds": 0.16,
+            "dragScale": 1.15,
+            "seed": "layer-main"
+          }
+        ]
+      }
+    },
+    "cue-willow": {
+      "id": "cue-willow",
+      "name": "03 · 버드나무",
+      "launcherId": "right",
+      "atTick": 840,
+      "design": {
+        "flight": {
+          "height": 200,
+          "riseSeconds": 1.65
+        },
+        "layers": [
+          {
+            "id": "layer-main",
+            "name": "버드나무",
+            "enabled": true,
+            "pattern": "willow",
+            "star": {
+              "body": {
+                "form": "sphere",
+                "scale": 1
+              },
+              "material": {
+                "base": "amber",
+                "finish": "silver",
+                "transition": 0.78,
+                "trail": 1
+              },
+              "lifetimeScale": 1,
+              "brightness": 1
+            },
+            "count": 132,
+            "spread": 1,
+            "rotation": 0,
+            "delaySeconds": 0,
+            "burstStrength": 3.2,
+            "burstSeconds": 0.16,
+            "dragScale": 1.15,
+            "seed": "layer-main"
+          }
+        ]
+      }
+    },
+    "cue-ring": {
+      "id": "cue-ring",
+      "name": "04 · 링",
+      "launcherId": "left",
+      "atTick": 1200,
+      "design": {
+        "flight": {
+          "height": 200,
+          "riseSeconds": 1.65
+        },
+        "layers": [
+          {
+            "id": "layer-main",
+            "name": "링",
+            "enabled": true,
+            "pattern": "ring",
+            "star": {
+              "body": {
+                "form": "sphere",
+                "scale": 0.9
+              },
+              "material": {
+                "base": "silver",
+                "finish": "azure",
+                "transition": 0.7,
+                "trail": 1
+              },
+              "lifetimeScale": 1,
+              "brightness": 1
+            },
+            "count": 128,
+            "spread": 1,
+            "rotation": 0,
+            "delaySeconds": 0,
+            "burstStrength": 3.2,
+            "burstSeconds": 0.16,
+            "dragScale": 1.15,
+            "seed": "layer-main"
+          }
+        ]
+      }
+    },
+    "cue-crossette": {
+      "id": "cue-crossette",
+      "name": "05 · 크로셋",
+      "launcherId": "center",
+      "atTick": 1560,
+      "design": {
+        "flight": {
+          "height": 200,
+          "riseSeconds": 1.65
+        },
+        "layers": [
+          {
+            "id": "layer-main",
+            "name": "크로셋",
+            "enabled": true,
+            "pattern": "crossette",
+            "star": {
+              "body": {
+                "form": "sphere",
+                "scale": 1
+              },
+              "material": {
+                "base": "amber",
+                "finish": "silver",
+                "transition": 0.78,
+                "trail": 1
+              },
+              "lifetimeScale": 1,
+              "brightness": 1
+            },
+            "count": 8,
+            "spread": 1,
+            "rotation": 0,
+            "delaySeconds": 0,
+            "burstStrength": 3.2,
+            "burstSeconds": 0.16,
+            "dragScale": 1.15,
+            "seed": "layer-main"
+          }
+        ]
+      }
+    }
+  }
+}

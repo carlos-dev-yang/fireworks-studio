@@ -1,0 +1,323 @@
+{
+  "formatVersion": "show-research/2",
+  "status": "읽기·토의를 위한 예시. 엔진 미구현, 확정된 외부 인터페이스 아님.",
+  "title": "다섯 발사대의 좌우 흐름과 대칭 피날레",
+  "catalogRef": "visual-effect-catalog.json",
+  "valueProvenance": "위치·시간·시각 조절값은 이 예시를 위해 만든 가상 값이며 실제 제품 관측치가 아니다.",
+  "timebase": {
+    "ticksPerSecond": 120,
+    "simulationStepTicks": 1,
+    "durationTicks": 5400
+  },
+  "replay": {
+    "showSeed": "festival-sketch",
+    "modelVersion": "proposal-v1",
+    "determinismGoal": "같은 엔진 버전에서 이벤트 순서를 재현. 기기 간 동일 픽셀 결과는 보장 대상이 아니다."
+  },
+  "world": {
+    "lengthUnit": "scene-unit",
+    "upAxis": "+Y",
+    "windProfile": "calm"
+  },
+  "launchers": [
+    {
+      "id": "left-outer",
+      "label": "왼쪽 바깥",
+      "positionU": [
+        -2,
+        0,
+        0
+      ],
+      "orientationQuaternion": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "left-inner",
+      "label": "왼쪽 안쪽",
+      "positionU": [
+        -1,
+        0,
+        0
+      ],
+      "orientationQuaternion": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "center",
+      "label": "가운데",
+      "positionU": [
+        0,
+        0,
+        0
+      ],
+      "orientationQuaternion": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "right-inner",
+      "label": "오른쪽 안쪽",
+      "positionU": [
+        1,
+        0,
+        0
+      ],
+      "orientationQuaternion": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "right-outer",
+      "label": "오른쪽 바깥",
+      "positionU": [
+        2,
+        0,
+        0
+      ],
+      "orientationQuaternion": [
+        0,
+        0,
+        0,
+        1
+      ]
+    }
+  ],
+  "cueGroups": [
+    {
+      "id": "left-to-right",
+      "label": "왼쪽에서 오른쪽으로"
+    },
+    {
+      "id": "symmetric-finale",
+      "label": "대칭 피날레"
+    }
+  ],
+  "cueSemantics": "cue.atTick은 효과 인스턴스를 생성하는 트리거 시점이다. 발사대의 해당 시점 위치·방향과 효과 정의·seed를 전달한다. 이후 개화와 불티의 결과는 런타임이 계산한다.",
+  "cues": [
+    {
+      "id": "cue-a",
+      "groupId": "left-to-right",
+      "launcherId": "left-outer",
+      "effectId": "red-peony-v1",
+      "seed": "cue-a",
+      "enabled": true,
+      "atTick": 900
+    },
+    {
+      "id": "cue-b",
+      "groupId": "left-to-right",
+      "launcherId": "left-inner",
+      "effectId": "blue-chrysanthemum-v1",
+      "seed": "cue-b",
+      "enabled": true,
+      "atTick": 960
+    },
+    {
+      "id": "cue-c",
+      "groupId": "left-to-right",
+      "launcherId": "center",
+      "effectId": "red-peony-v1",
+      "seed": "cue-c",
+      "enabled": true,
+      "atTick": 1020
+    },
+    {
+      "id": "cue-d",
+      "groupId": "left-to-right",
+      "launcherId": "right-inner",
+      "effectId": "blue-chrysanthemum-v1",
+      "seed": "cue-d",
+      "enabled": true,
+      "atTick": 1080
+    },
+    {
+      "id": "cue-e",
+      "groupId": "left-to-right",
+      "launcherId": "right-outer",
+      "effectId": "red-peony-v1",
+      "seed": "cue-e",
+      "enabled": true,
+      "atTick": 1140
+    },
+    {
+      "id": "cue-f",
+      "groupId": "symmetric-finale",
+      "launcherId": "left-outer",
+      "effectId": "gold-willow-v1",
+      "seed": "cue-f",
+      "enabled": true,
+      "atTick": 3240
+    },
+    {
+      "id": "cue-g",
+      "groupId": "symmetric-finale",
+      "launcherId": "left-inner",
+      "effectId": "blue-chrysanthemum-v1",
+      "seed": "cue-g",
+      "enabled": true,
+      "atTick": 3360
+    },
+    {
+      "id": "cue-h",
+      "groupId": "symmetric-finale",
+      "launcherId": "center",
+      "effectId": "gold-willow-v1",
+      "seed": "cue-h",
+      "enabled": true,
+      "atTick": 3360
+    },
+    {
+      "id": "cue-i",
+      "groupId": "symmetric-finale",
+      "launcherId": "right-inner",
+      "effectId": "blue-chrysanthemum-v1",
+      "seed": "cue-i",
+      "enabled": true,
+      "atTick": 3360
+    },
+    {
+      "id": "cue-j",
+      "groupId": "symmetric-finale",
+      "launcherId": "right-outer",
+      "effectId": "gold-willow-v1",
+      "seed": "cue-j",
+      "enabled": true,
+      "atTick": 3240
+    }
+  ],
+  "cameraTrack": {
+    "id": "audience-camera",
+    "purpose": "발사대 가까이에서 공연 전체가 보이는 위치로 이동한다.",
+    "interpolation": "smooth-position-and-target",
+    "keyframes": [
+      {
+        "atTick": 0,
+        "positionU": [
+          0,
+          0.8,
+          2
+        ],
+        "targetU": [
+          0,
+          0.1,
+          0
+        ],
+        "verticalFovDegrees": 50
+      },
+      {
+        "atTick": 720,
+        "positionU": [
+          0,
+          2,
+          9
+        ],
+        "targetU": [
+          0,
+          2,
+          0
+        ],
+        "verticalFovDegrees": 50
+      },
+      {
+        "atTick": 3480,
+        "positionU": [
+          0,
+          2.5,
+          11
+        ],
+        "targetU": [
+          0,
+          2.5,
+          0
+        ],
+        "verticalFovDegrees": 50
+      }
+    ]
+  },
+  "audio": {
+    "musicAsset": null,
+    "listenerMode": "audience-camera",
+    "note": "음악 파일과 소리 샘플은 포함하지 않는다."
+  },
+  "effectDefinitions": [
+    {
+      "id": "red-peony-v1",
+      "patternId": "peony",
+      "paletteId": "strontium-red",
+      "version": 1,
+      "markers": {
+        "launch": 0,
+        "burst": 300
+      },
+      "simulationEndTick": 840,
+      "controls": {
+        "density": 0.55,
+        "spread": 0.6,
+        "trailPersistence": 0,
+        "hang": 0.25,
+        "symmetry": 0.9
+      },
+      "modifiers": []
+    },
+    {
+      "id": "blue-chrysanthemum-v1",
+      "patternId": "chrysanthemum",
+      "paletteId": "copper-blue",
+      "version": 1,
+      "markers": {
+        "launch": 0,
+        "burst": 300
+      },
+      "simulationEndTick": 1080,
+      "controls": {
+        "density": 0.6,
+        "spread": 0.7,
+        "trailPersistence": 0.6,
+        "hang": 0.4,
+        "symmetry": 0.85
+      },
+      "modifiers": [
+        "gold-trail"
+      ]
+    },
+    {
+      "id": "gold-willow-v1",
+      "patternId": "willow",
+      "paletteId": "warm-gold",
+      "version": 1,
+      "markers": {
+        "launch": 0,
+        "burst": 360
+      },
+      "simulationEndTick": 1560,
+      "controls": {
+        "density": 0.6,
+        "spread": 0.65,
+        "trailPersistence": 0.95,
+        "hang": 0.9,
+        "symmetry": 0.7
+      },
+      "modifiers": []
+    }
+  ],
+  "calculationPolicy": {
+    "authoredInputs": "효과 정의·이벤트 시점·가상 배치·환경·seed·모델 버전",
+    "runtimeResults": "위치·밝기·불티·연기·자식 이벤트는 공연 JSON에 저장하지 않는다.",
+    "seekBaseline": "캐시 없이도 필요한 입력을 다시 실행해 목표 시점의 상태를 복원한다.",
+    "checkpointPolicy": "필요할 때 추가할 선택적 재생 최적화. 아직 구현하지 않았다."
+  }
+}

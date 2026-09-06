@@ -1,0 +1,268 @@
+{
+  "formatVersion": "visual-catalog-research/1",
+  "status": "설계 토의용 분류 데이터. 실행 가능한 엔진 효과 라이브러리나 확정 저장 규격이 아니다.",
+  "sourceIndex": "sources.json",
+  "units": "모든 시각 조절량은 가상 장면의 값이다. 실제 화약의 양, 배합, 치수, 압력과 대응하지 않는다.",
+  "palettes": [
+    {
+      "id": "strontium-red",
+      "label": "진홍색 발광",
+      "chemistryReference": "스트론튬 계열 발광의 교육용 참고",
+      "sourceIds": [
+        "C01",
+        "C02"
+      ],
+      "note": "관측된 특정 제품의 스펙트럼이나 RGB 측정값은 제공하지 않는다."
+    },
+    {
+      "id": "copper-blue",
+      "label": "청색 발광",
+      "chemistryReference": "구리 계열 발광의 교육용 참고",
+      "sourceIds": [
+        "C01",
+        "C02"
+      ],
+      "note": "발광종과 관측 조건에 따라 색이 달라질 수 있다."
+    },
+    {
+      "id": "barium-green",
+      "label": "녹색 발광",
+      "chemistryReference": "바륨 계열 발광의 교육용 참고",
+      "sourceIds": [
+        "C01",
+        "C02"
+      ],
+      "note": "실제 원료 선택이나 배합 지침이 아니다."
+    },
+    {
+      "id": "sodium-yellow",
+      "label": "노란색 발광",
+      "chemistryReference": "나트륨 계열 발광의 교육용 참고",
+      "sourceIds": [
+        "C01"
+      ],
+      "note": "표시 색과 스펙트럼은 같은 데이터가 아니다."
+    },
+    {
+      "id": "calcium-orange",
+      "label": "주황색 발광",
+      "chemistryReference": "칼슘 계열 발광의 교육용 참고",
+      "sourceIds": [
+        "C01"
+      ],
+      "note": "원소명은 설명용 메타데이터다."
+    },
+    {
+      "id": "white-incandescent",
+      "label": "백색·은빛 불티",
+      "chemistryReference": "고온 입자의 열복사 및 금속 불티의 교육용 참고",
+      "sourceIds": [
+        "C01",
+        "C02"
+      ],
+      "note": "밝기와 색을 독립 곡선으로 편집한다."
+    },
+    {
+      "id": "warm-gold",
+      "label": "따뜻한 금빛 잔광",
+      "chemistryReference": "고온 입자 발광의 시각적 참고",
+      "sourceIds": [
+        "C02"
+      ],
+      "note": "금빛이라는 효과 이름이 금 원소의 사용을 뜻하지 않는다."
+    },
+    {
+      "id": "artistic-violet",
+      "label": "보라색",
+      "chemistryReference": null,
+      "sourceIds": [],
+      "note": "시각 디자인용 팔레트. 단일 원소나 배합법과 대응시키지 않는다."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "peony",
+      "label": "Peony · 모란형",
+      "family": "spherical",
+      "visualIdentity": "꼬리가 거의 없는 구형 점 무리",
+      "implementationIdea": "구면 방향 분포에 짧은 발광 곡선을 적용한다.",
+      "priority": "first",
+      "sourceIds": [
+        "D01"
+      ]
+    },
+    {
+      "id": "chrysanthemum",
+      "label": "Chrysanthemum · 국화형",
+      "family": "spherical",
+      "visualIdentity": "구형으로 퍼지는 줄기",
+      "implementationIdea": "별마다 독립적으로 남는 불티를 생성한다.",
+      "priority": "first",
+      "sourceIds": [
+        "D01",
+        "D03"
+      ]
+    },
+    {
+      "id": "willow",
+      "label": "Willow · 버드나무형",
+      "family": "hanging",
+      "visualIdentity": "길게 처지는 잔광",
+      "implementationIdea": "긴 시각 수명과 감속·낙하를 조합한다.",
+      "priority": "first",
+      "sourceIds": [
+        "D01"
+      ]
+    },
+    {
+      "id": "brocade",
+      "label": "Brocade · 금빛 꼬리 효과",
+      "family": "trail_style",
+      "visualIdentity": "촘촘하게 반짝이는 금빛 꼬리",
+      "implementationIdea": "형태와 분리된 꼬리 스타일로 재사용한다.",
+      "priority": "later",
+      "sourceIds": [
+        "D01"
+      ]
+    },
+    {
+      "id": "palm",
+      "label": "Palm · 야자형",
+      "family": "sparse_radial",
+      "visualIdentity": "굵고 성긴 가지",
+      "implementationIdea": "소수 방향과 두꺼운 불티 흐름으로 표현한다.",
+      "priority": "later",
+      "sourceIds": [
+        "D01"
+      ]
+    },
+    {
+      "id": "ring",
+      "label": "Ring · 고리형",
+      "family": "planar",
+      "visualIdentity": "공중의 고리",
+      "implementationIdea": "한 평면의 원형 분포를 만들고 방향을 별도 저장한다.",
+      "priority": "first",
+      "sourceIds": [
+        "D01",
+        "D03"
+      ]
+    },
+    {
+      "id": "pistil",
+      "label": "Pistil · 중심 꽃심",
+      "family": "nested",
+      "visualIdentity": "외곽과 안쪽 중심이 함께 보임",
+      "implementationIdea": "중심을 공유하는 두 시각 이벤트를 계층화한다.",
+      "priority": "later",
+      "sourceIds": [
+        "D01"
+      ]
+    },
+    {
+      "id": "comet",
+      "label": "Comet · 혜성형",
+      "family": "rising",
+      "visualIdentity": "상승하는 한 줄기",
+      "implementationIdea": "공중 개화 없이 발광체와 꼬리만 사용한다.",
+      "priority": "first",
+      "sourceIds": [
+        "D01"
+      ]
+    },
+    {
+      "id": "mine",
+      "label": "Mine · 지상 부채형",
+      "family": "ground_burst",
+      "visualIdentity": "아래에서 한 번에 퍼지는 빛 무리",
+      "implementationIdea": "지면의 가상 원점에서 원뿔 방향 분포를 생성한다.",
+      "priority": "later",
+      "sourceIds": [
+        "D01"
+      ]
+    },
+    {
+      "id": "fountain",
+      "label": "Fountain · 분수형",
+      "family": "continuous",
+      "visualIdentity": "지속적으로 솟고 내려오는 불티",
+      "implementationIdea": "일정 시간 유지되는 emitter로 표현한다.",
+      "priority": "later",
+      "sourceIds": [
+        "D01"
+      ]
+    },
+    {
+      "id": "crossette",
+      "label": "Crossette · 십자 분기형",
+      "family": "branching",
+      "visualIdentity": "진행 중 십자로 나뉨",
+      "implementationIdea": "부모 발광체에서 자식 이벤트를 생성한다.",
+      "priority": "later",
+      "sourceIds": [
+        "D01",
+        "D03"
+      ]
+    },
+    {
+      "id": "multi-break",
+      "label": "Multi-break · 다단 개화",
+      "family": "compound",
+      "visualIdentity": "여러 개화가 순차적으로 이어짐",
+      "implementationIdea": "지연된 자식 개화 이벤트의 트리를 사용한다.",
+      "priority": "later",
+      "sourceIds": [
+        "P02",
+        "D03"
+      ]
+    }
+  ],
+  "modifiers": [
+    {
+      "id": "strobe",
+      "label": "깜빡임",
+      "controls": [
+        "frequency",
+        "duty",
+        "phaseVariation"
+      ],
+      "implementationIdea": "이동 궤적과 밝기 펄스를 분리한다.",
+      "sourceIds": [
+        "D03"
+      ]
+    },
+    {
+      "id": "color-transition",
+      "label": "시간별 색 변화",
+      "controls": [
+        "ageColorCurve",
+        "transitionWidth"
+      ],
+      "implementationIdea": "정규화된 입자 나이에 따라 색을 보간한다.",
+      "sourceIds": [
+        "D03",
+        "P04"
+      ]
+    },
+    {
+      "id": "gold-trail",
+      "label": "금빛 꼬리",
+      "controls": [
+        "trailDensity",
+        "trailWidth",
+        "trailPersistence"
+      ],
+      "implementationIdea": "별 본체의 색과 꼬리의 색을 독립적으로 정한다.",
+      "sourceIds": [
+        "D03"
+      ]
+    }
+  ],
+  "controlDefinitions": {
+    "density": "0~1의 연출용 밀도. 실제 화약의 밀도나 질량이 아니다.",
+    "spread": "0~1의 장면 내 펼침 정도. 실제 개화 압력과 대응하지 않는다.",
+    "trailPersistence": "0~1의 잔광 지속 성격. 수명 곡선은 효과 자산이 따로 정의한다.",
+    "hang": "0~1의 오래 머무는 인상. 가상 움직임 프로필로 해석한다.",
+    "symmetry": "0~1의 도형 정돈 정도. 값에 따른 분포는 엔진 모델 버전에 귀속된다."
+  }
+}
