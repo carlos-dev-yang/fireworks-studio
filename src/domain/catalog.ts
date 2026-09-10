@@ -1,12 +1,10 @@
-import { CHARACTER_PATTERNS, CHARACTER_STYLE } from './characterCatalog';
-
 export const FORMAT_VERSION = 'star-studio/2' as const;
 export const MODEL_VERSION = 'visual-star/2' as const;
 export const TICK_RATE = 120;
 export const LIMITS = {
   fireworks: 64, layers: 8, launchers: 32, cues: 256, history: 80, nameLength: 60,
   rotation: { min: -180, max: 180 }, stage: { min: -1, max: 1 },
-  count: { min: 4, max: CHARACTER_STYLE.parts.fill.maxCount }, spread: { min: 0.5, max: 1.8 },
+  count: { min: 4, max: 4096 }, spread: { min: 0.5, max: 1.8 },
   size: { min: 0.6, max: 1.6 }, trail: { min: 0, max: 2.5 },
   transition: { min: 0.2, max: 0.95 }, lifetime: { min: 0.5, max: 2 }, brightness: { min: 0.2, max: 2 },
   height: { min: 80, max: 500 }, rise: { min: 0.3, max: 6 }, delay: { min: 0, max: 6 },
@@ -31,7 +29,7 @@ export const PATTERNS = {
   cat: { count: 260, maxCount: 512, speed: 65, gravity: 7, dragFactor: 1, lifeFactor: 1.25, tailFactor: 0.1, previewAge: 1.6 },
   apple: { count: 210, maxCount: 384, speed: 65, gravity: 7, dragFactor: 1, lifeFactor: 1.25, tailFactor: 0.1, previewAge: 1.6 },
   cup: { count: 220, maxCount: 384, speed: 65, gravity: 7, dragFactor: 1, lifeFactor: 1.25, tailFactor: 0.1, previewAge: 1.6 },
-  ...CHARACTER_PATTERNS,
+  artwork: { count: 1024, maxCount: 4096, speed: 65, gravity: 5, dragFactor: 1, lifeFactor: 1.25, tailFactor: .07, previewAge: 1.85 },
 } as const;
 export type PatternId = keyof typeof PATTERNS;
 export const SCENE = {

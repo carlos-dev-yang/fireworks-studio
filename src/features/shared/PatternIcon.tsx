@@ -1,10 +1,7 @@
 import type { PatternId } from '../../domain/catalog';
 import { isShape, SHAPE_PATHS } from '../../domain/shapes';
-import { CHARACTER_PATTERNS, isCharacterPattern } from '../../domain/characterCatalog';
-import { characterIcon } from '../../domain/characters';
 
 export function PatternIcon({ pattern, className = '' }: { pattern: PatternId; className?: string }) {
-  if (isCharacterPattern(pattern)) return <svg className={`pattern-icon ${className}`} viewBox="0 0 40 40" aria-hidden="true">{characterIcon(CHARACTER_PATTERNS[pattern].character).map(({ color, path }) => <path key={color} d={path} fill={color} />)}</svg>;
   const rays = pattern === 'crossette' ? 8 : 16;
   if (isShape(pattern)) return <svg className={`pattern-icon ${className}`} viewBox="0 0 40 40" fill="none" aria-hidden="true">{SHAPE_PATHS[pattern].map((path, index) => <polyline key={index} points={path.map(([x, y]) => `${20 + x * 13},${21 - y * 13}`).join(' ')} stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" strokeLinecap="round" />)}</svg>;
   return <svg className={`pattern-icon ${className}`} viewBox="0 0 40 40" fill="none" aria-hidden="true">

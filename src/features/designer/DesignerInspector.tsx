@@ -18,7 +18,7 @@ import { FlightEditor } from './FlightEditor';
 const PatternEditor = memo(function PatternEditor({ owner, layer }: { owner: DesignOwner; layer: LayerDefinition }) {
   const { t, number } = useI18n();
   const update = (patch: Partial<LayerDefinition>) => documentActions.updateLayer(owner, layer.id, current => ({ ...current, ...patch }));
-  return <><NameField visible label={t('designer.layerName')} value={layer.name} onCommit={name => update({ name })} /><SelectField label={t('field.pattern')} help="help.pattern" value={layer.pattern} onChange={value => documentActions.setPattern(owner, layer.id, value as PatternId)}><PatternOptions /></SelectField>
+  return <><NameField visible label={t('designer.layerName')} value={layer.name} onCommit={name => update({ name })} /><SelectField label={t('field.pattern')} help="help.pattern" value={layer.pattern} onChange={value => documentActions.setPattern(owner, layer.id, value as PatternId)}><PatternOptions includeArtwork={layer.pattern === 'artwork'} /></SelectField>
     <NumberField label={t('field.count')} help="help.count" value={layer.count} min={LIMITS.count.min} max={PATTERNS[layer.pattern].maxCount} onCommit={count => update({ count })} />
     <RangeField label={t('field.spread')} help="help.spread" value={layer.spread} {...LIMITS.spread} display={`${number(layer.spread, 2)}×`} onChange={spread => update({ spread })} />
     <RangeField label={t('field.rotation')} help="help.rotation" value={layer.rotation} {...LIMITS.rotation} step={1} display={`${number(layer.rotation, 0)}°`} onChange={rotation => update({ rotation })} />

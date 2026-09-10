@@ -6,6 +6,7 @@ import type { FireworkDesign, ShowDocument } from './schema';
 export class DocumentError extends Error {
   constructor(public code: 'invalidJson' | 'unsupportedFormat' | 'invalidDocument') { super(code); }
 }
+
 export function parseShow(source: string): ShowDocument {
   let input: unknown;
   try { input = JSON.parse(source); } catch { throw new DocumentError('invalidJson'); }

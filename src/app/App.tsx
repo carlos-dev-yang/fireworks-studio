@@ -1,4 +1,4 @@
-import { Component, useEffect } from 'react';
+import { Component, useEffect, useState } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { useStore } from 'zustand';
 import * as Tooltip from '@radix-ui/react-tooltip';
@@ -14,6 +14,7 @@ import { copyItem, pasteItem } from '../state/clipboardActions';
 import { noticeStore, notify } from '../state/noticeStore';
 import { useI18n } from '../i18n';
 import { startPersistence } from './persistence';
+import type { StoredProject } from '../storage/library';
 import { Diagnostics } from './Diagnostics';
 import { useRenderProbe } from './useRenderProbe';
 function FatalError() { const { t } = useI18n(); return <main className="fatal-error"><h1>{t('error.screen')}</h1><p>{t('error.reload')}</p></main>; }
@@ -31,10 +32,11 @@ function MobilePanels() {
   const { t } = useI18n(); const selected = useStore(editorStore, state => state.mobilePanel);
   return <nav className="mobile-panels" aria-label={t('nav.settings')}><button className={selected === 'library' ? 'active' : ''} onClick={() => editorStore.setState({ mobilePanel: 'library' })}>{t('nav.library')}</button><button className={selected === 'inspector' ? 'active' : ''} onClick={() => editorStore.setState({ mobilePanel: 'inspector' })}>{t('nav.settings')}</button></nav>;
 }
-export function App() {
+export function App({ project, initialPersistenceError }: { project: StoredProject; initialPersistenceError?: Error }) {
+  const [activeProject, setActiveProject] = useState(project);
   useRenderProbe('App'); const page = useStore(editorStore, state => state.page), theater = useStore(editorStore, state => state.theater);
   useEffect(() => {
-    const stop = startPersistence(), repair = documentStore.subscribe(() => editorActions.repair());
+    const stop = startPersistence(project, undefined, initialPersistenceError), repair = documentStore.subscribe(() => editorActions.repair());
     if (recoveryMessage) notify(recoveryMessage, 'info');
     const shortcut = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -47,6 +49,6 @@ export function App() {
     };
     window.addEventListener('keydown', shortcut);
     return () => { stop(); repair(); window.removeEventListener('keydown', shortcut); };
-  }, []);
-  return <ErrorBoundary><Tooltip.Provider delayDuration={350} skipDelayDuration={100}><div className={`studio ${page}-page ${theater ? 'theater-mode' : ''}`}><Header /><Library /><CanvasHost /><MobilePanels /><Inspector />{page === 'show' && !theater && <Timeline />}</div><Notice />{import.meta.env.DEV && new URLSearchParams(location.search).has('diagnostics') && <Diagnostics />}</Tooltip.Provider></ErrorBoundary>;
+  }, [project, initialPersistenceError]);
+  return <ErrorBoundary><Tooltip.Provider delayDuration={350} skipDelayDuration={100}><div className={`studio ${page}-page ${theater ? 'theater-mode' : ''}`}><Header projectId={activeProject.id} onProjectChange={setActiveProject} /><Library /><CanvasHost /><MobilePanels /><Inspector />{page === 'show' && !theater && <Timeline />}</div><Notice />{import.meta.env.DEV && new URLSearchParams(location.search).has('diagnostics') && <Diagnostics />}</Tooltip.Provider></ErrorBoundary>;
 }

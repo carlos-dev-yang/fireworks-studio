@@ -1,9 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { SCENE } from '../domain/catalog';
 import type { LauncherDefinition } from '../domain/schema';
 import type { MessageKey } from '../i18n';
 import type { RenderFrame } from '../runtime/ParticleEngine';
+import type { ViewportBackground } from '../state/backgroundStore';
+import { createYeouidoEnvironment, disposeThreeResources } from './YeouidoBackground';
 
 const VIEW = {
   sky: '#080b0e', ground: '#6e747e', launcher: '#777a7e', accent: '#f7b44f',
@@ -19,6 +22,8 @@ export class ThreeViewport {
   private controls: OrbitControls;
   private points: THREE.Points;
   private material: THREE.ShaderMaterial;
+  private grid: THREE.GridHelper;
+  private yeouido = new THREE.Group();
   private launchers = new THREE.Group();
   private observer: ResizeObserver;
   private show = false;
@@ -27,20 +32,28 @@ export class ThreeViewport {
   private height = 1;
   private onCameraChange: () => void;
   private onContextLost: (event: Event) => void;
+  private cityLoad?: Promise<void>;
+  private disposed = false;
+  private readonly invalidate: () => void;
 
   constructor(host: HTMLElement, invalidate: () => void, onError: (message: MessageKey) => void) {
+    this.invalidate = invalidate;
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, VIEW.pixelRatioLimit));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.toneMapping = THREE.NoToneMapping;
+    this.renderer.toneMappingExposure = 1;
 
     this.renderer.domElement.setAttribute('role', 'img');
     host.append(this.renderer.domElement);
     this.scene.background = new THREE.Color(VIEW.sky);
-    const grid = new THREE.GridHelper(VIEW.groundSize, VIEW.gridDivisions, VIEW.ground, VIEW.ground);
-    grid.material.transparent = true;
-    grid.material.opacity = 0.10;
-    grid.material.depthWrite = false;
-    this.scene.add(grid, this.launchers);
+    this.grid = new THREE.GridHelper(VIEW.groundSize, VIEW.gridDivisions, VIEW.ground, VIEW.ground);
+    this.grid.material.transparent = true;
+    this.grid.material.opacity = 0.10;
+    this.grid.material.depthWrite = false;
+    this.scene.add(this.grid, this.yeouido, this.launchers);
+    this.yeouido.add(createYeouidoEnvironment());
+    this.yeouido.visible = false;
     this.material = new THREE.ShaderMaterial({
       uniforms: { pixelScale: { value: 1 }, maxPixels: { value: 120 } },
       vertexShader: `
@@ -81,7 +94,7 @@ export class ThreeViewport {
     this.controls.minDistance = VIEW.minDistance;
     this.controls.maxDistance = VIEW.maxDistance;
     this.controls.maxPolarAngle = Math.PI * 0.62;
-    this.onCameraChange = invalidate;
+    this.onCameraChange = this.invalidate;
     this.controls.addEventListener('change', this.onCameraChange);
     this.onContextLost = event => { event.preventDefault(); onError('error.context'); };
     this.renderer.domElement.addEventListener('webglcontextlost', this.onContextLost);
@@ -106,6 +119,39 @@ export class ThreeViewport {
     if (this.show === show) return;
     this.show = show;
     this.resetCamera();
+  }
+  setBackground(background: ViewportBackground) {
+    const isYeouido = background === 'yeouido';
+    this.grid.visible = !isYeouido;
+    this.yeouido.visible = isYeouido;
+    this.scene.background = new THREE.Color(isYeouido ? '#041128' : VIEW.sky);
+    this.renderer.toneMapping = isYeouido ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
+    this.renderer.toneMappingExposure = isYeouido ? 1.05 : 1;
+    if (isYeouido) this.loadYeouidoCity();
+  }
+  private loadYeouidoCity() {
+    if (this.cityLoad) return;
+    const load = new Promise<void>((resolve, reject) => {
+      new GLTFLoader().load(
+        `${import.meta.env.BASE_URL}models/yeouido-night-skyline.glb`,
+        gltf => {
+          const city = gltf.scene;
+          city.name = 'Blender-authored Yeouido skyline';
+          // Asset contract: Y-up, front at +Z, ground at Y=0, and centered on X.
+          city.position.set(0, 0, -925);
+          if (this.disposed) disposeThreeResources(city);
+          else this.yeouido.add(city);
+          resolve();
+        },
+        undefined,
+        reject,
+      );
+    });
+    this.cityLoad = load;
+    void load.then(() => { if (!this.disposed) this.invalidate(); }).catch(() => {
+      if (this.cityLoad === load) this.cityLoad = undefined;
+      if (!this.disposed) this.invalidate();
+    });
   }
   setLabel(label: string) { this.renderer.domElement.setAttribute('aria-label', label); }
   setHeight(height: number) { if (this.burstHeight !== height) { this.burstHeight = height; this.resetCamera(); } }
@@ -165,17 +211,12 @@ export class ThreeViewport {
   }
   render() { this.renderer.render(this.scene, this.camera); }
   dispose() {
+    this.disposed = true;
     this.observer.disconnect();
     this.controls.removeEventListener('change', this.onCameraChange);
     this.controls.dispose();
     this.renderer.domElement.removeEventListener('webglcontextlost', this.onContextLost);
-    this.scene.traverse(object => {
-      if (object instanceof THREE.Mesh || object instanceof THREE.Points || object instanceof THREE.LineSegments) {
-        object.geometry.dispose();
-        const materials = Array.isArray(object.material) ? object.material : [object.material];
-        materials.forEach(material => material.dispose());
-      }
-    });
+    disposeThreeResources(this.scene);
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }

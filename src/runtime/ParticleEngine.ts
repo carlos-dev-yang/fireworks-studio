@@ -6,7 +6,7 @@ import { compileLayer, compileSingleStar, positionAt } from '../domain/patterns'
 import type { CompiledEffect } from '../domain/patterns';
 import { getDesign } from '../domain/schema';
 import type { Cue, DesignOwner, FireworkDesign, LauncherDefinition, ShowDocument } from '../domain/schema';
-export type EngineTarget = { kind: 'show' } | { kind: 'preview'; owner: DesignOwner | null; view: 'firework' | 'layer' | 'star'; layerId: string | null };
+export type EngineTarget = { kind: 'show' } | { kind: 'preview'; owner: DesignOwner | null; design?: FireworkDesign; view: 'firework' | 'layer' | 'star'; layerId: string | null };
 interface Instance { start: number; ground: Vec3; offset: Vec3; rise: number; height: number; layers: { effect: CompiledEffect; delay: number }[]; duration: number }
 interface CachedInstance { cue: Cue; launcher: LauncherDefinition; instance: Instance }
 export interface RenderFrame { positions: Float32Array; colors: Float32Array; sizes: Float32Array; brightness: Float32Array; count: number; capped: boolean }
@@ -36,7 +36,7 @@ export class ParticleEngine implements SimulationEngine {
         return instance;
       });
     } else {
-      const design = target.owner ? getDesign(document, target.owner) : undefined;
+      const design = target.design ?? (target.owner ? getDesign(document, target.owner) : undefined);
       this.instances = design ? [makeInstance(design, 0, [0, 0, 0], target.view, target.layerId)] : [];
     }
     const minimum = target.kind === 'show' ? SCENE.showMinimumSeconds : SCENE.previewMinimumSeconds;

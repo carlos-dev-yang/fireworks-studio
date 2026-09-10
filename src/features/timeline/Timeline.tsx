@@ -57,18 +57,31 @@ function Playhead({ scale }: { scale: number }) {
   useEffect(() => { const update = () => { if (ref.current) ref.current.style.transform = `translateX(${playback.getSnapshot().tick / TICK_RATE * scale}px)`; }; update(); return playback.subscribe(update); }, [scale]);
   return <div className="playhead-track"><div className="playhead" ref={ref}><span /></div></div>;
 }
+function useFollowPlayhead(scrollRef: React.RefObject<HTMLDivElement | null>, scale: number) {
+  useEffect(() => playback.subscribe(() => {
+    const { playing, tick } = playback.getSnapshot();
+    const scroll = scrollRef.current;
+    if (!playing || !scroll) return;
+    const contentX = TIMELINE.laneGutter + tick / TICK_RATE * scale;
+    const viewport = scroll.clientWidth;
+    const target = Math.max(0, Math.min(scroll.scrollWidth - viewport, contentX - Math.max(TIMELINE.laneGutter, viewport * 0.42)));
+    if (Math.abs(scroll.scrollLeft - target) > 2) scroll.scrollLeft = target;
+  }), [scale, scrollRef]);
+}
 export function Timeline() {
   useRenderProbe('Timeline'); const { t } = useI18n();
   const cues = useStore(documentStore, state => state.document.cues), launchers = useStore(documentStore, state => state.document.launchers);
   const canPaste = useStore(editorStore, state => state.clipboard?.kind === 'cue');
   const hasFireworks = useStore(documentStore, state => Object.keys(state.document.fireworks).length > 0);
   const [scale, setScale] = useState<number>(TIMELINE.pixelsPerSecond), [dialog, setDialog] = useState<'cue' | 'sequence' | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const layout = useMemo(() => Object.values(launchers).sort((a, b) => a.x - b.x || a.id.localeCompare(b.id)).map(launcher => ({ id: launcher.id, ...stackCues(Object.values(cues).filter(cue => cue.launcherId === launcher.id)) })), [cues, launchers]);
   const duration = useMemo(() => Math.max(MIN_VISIBLE_SECONDS, timelineDurationSeconds({ cues }) + LOOKAHEAD_SECONDS), [cues]);
   const width = duration * scale;
+  useFollowPlayhead(scrollRef, scale);
   return <section className="timeline"><div className="timeline-toolbar"><div className="timeline-title"><h2>{t('show.title')}</h2><Help label={t('show.title')} content="help.timeline" /></div><div className="timeline-actions"><Tip content="help.paste"><button className="icon-button" aria-label={t('action.paste')} disabled={!canPaste} onClick={pasteItem}><ClipboardPaste size={15} /></button></Tip><Tip content="help.position"><button className="button" onClick={() => { const id = documentActions.addLauncher(); if (id) editorActions.select({ kind: 'launcher', id }); }}><RadioTower size={14} />{t('show.addLauncher')}</button></Tip><Tip content="help.sequence"><button className="button" disabled={!hasFireworks} onClick={() => setDialog('sequence')}><ListOrdered size={15} />{t('show.sequence')}</button></Tip><Tip content="help.addCue"><button className="button primary" disabled={!hasFireworks} onClick={() => setDialog('cue')}><Plus size={15} />{t('show.addCue')}</button></Tip></div></div>
     <div className="timeline-playback"><Transport /><PreviewScrubber /><label className="timeline-zoom"><span>{t('show.zoom')}</span><input type="range" aria-label={t('show.zoom')} min={TIMELINE.minZoom} max={TIMELINE.maxZoom} value={scale} onChange={event => setScale(Number(event.currentTarget.value))} /><Help label={t('show.zoom')} content="help.zoom" /></label></div>
-    <div className="timeline-scroll"><div className="timeline-content" style={{ width: width + TIMELINE.laneGutter, '--timeline-gutter': `${TIMELINE.laneGutter}px` } as React.CSSProperties}><div className="timeline-ruler"><div className="ruler-gutter">{t('cue.launcher')}</div><div className="ruler" style={{ width, backgroundSize: `${scale}px 5px` }} onClick={event => playback.seek(dropTick(event.clientX, event.currentTarget.getBoundingClientRect().left, scale))}>{Array.from({ length: Math.floor(duration / TIMELINE.majorStep) + 1 }, (_, index) => <span key={index} className="ruler-label" style={{ left: index * TIMELINE.majorStep * scale }}>{formatTime(index * TIMELINE.majorStep * TICK_RATE).slice(0, 5)}</span>)}</div></div>
+    <div className="timeline-scroll" ref={scrollRef}><div className="timeline-content" style={{ width: width + TIMELINE.laneGutter, '--timeline-gutter': `${TIMELINE.laneGutter}px` } as React.CSSProperties}><div className="timeline-ruler"><div className="ruler-gutter">{t('cue.launcher')}</div><div className="ruler" style={{ width, backgroundSize: `${scale}px 5px` }} onClick={event => playback.seek(dropTick(event.clientX, event.currentTarget.getBoundingClientRect().left, scale))}>{Array.from({ length: Math.floor(duration / TIMELINE.majorStep) + 1 }, (_, index) => <span key={index} className="ruler-label" style={{ left: index * TIMELINE.majorStep * scale }}>{formatTime(index * TIMELINE.majorStep * TICK_RATE).slice(0, 5)}</span>)}</div></div>
       <div className="timeline-lanes">{layout.map(lane => <LauncherLane key={lane.id} {...lane} scale={scale} width={width} />)}<Playhead scale={scale} /></div>
     </div></div>{dialog === 'cue' && <AddCueDialog onClose={() => setDialog(null)} />}{dialog === 'sequence' && <SequenceDialog onClose={() => setDialog(null)} />}
   </section>;

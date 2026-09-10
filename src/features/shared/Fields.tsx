@@ -28,6 +28,10 @@ export function SelectField({ label, help, value, children, onChange }: { label:
   const id = useId();
   return <div className="field inline-field"><Label id={id} label={label} help={help} /><select id={id} value={value} onChange={event => onChange(event.currentTarget.value)}>{children}</select></div>;
 }
+export function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  const id = useId();
+  return <div className="field inline-field color-field"><Label id={id} label={label} /><div className="color-wrap"><input id={id} type="color" value={value} onPointerDown={documentActions.begin} onFocus={documentActions.begin} onChange={event => onChange(event.currentTarget.value)} onBlur={documentActions.end} /><output>{value.toUpperCase()}</output></div></div>;
+}
 export function NameField({ label, value, onCommit, visible = false }: { label: string; value: string; onCommit: (value: string) => void; visible?: boolean }) {
   const id = useId();
   return <label className="name-field" htmlFor={id}><span className={visible ? 'subtle-label' : 'sr-only'}>{label}</span><input key={value} id={id} maxLength={LIMITS.nameLength} defaultValue={value}

@@ -1,12 +1,11 @@
-import { MATERIALS, PATTERNS, SCENE } from './catalog';
+import { PATTERNS, SCENE } from './catalog';
 import { compileStar } from './compile';
 import type { StarProfile } from './compile';
 import { linearColor, randomSource } from './math';
 import type { Vec3 } from './math';
 import type { LayerDefinition, StarDefinition } from './schema';
 import { isShape, sampleShape } from './shapes';
-import { CHARACTER_STYLE, isCharacterPattern } from './characterCatalog';
-import { sampleCharacter } from './characters';
+import { sampleArtwork } from './imageArt';
 
 export interface StarTrack {
   id: string; origin: Vec3; velocity: Vec3; start: number; life: number;
@@ -26,7 +25,12 @@ export function positionAt(track: StarTrack, age: number, out: Vec3): Vec3 {
 }
 
 const compiledLayers = new WeakMap<LayerDefinition, CompiledEffect>();
-const characterNeutralColor = linearColor(MATERIALS.silver.color);
+function paletteColor(colors: string[], amount: number) {
+  const scaled = Math.max(0, Math.min(1, amount)) * (colors.length - 1), index = Math.floor(scaled), next = colors[Math.min(colors.length - 1, index + 1)], mix = scaled - index;
+  const channel = (axis: number) => Math.round(Number.parseInt(colors[index].slice(1 + axis * 2, 3 + axis * 2), 16) + (Number.parseInt(next.slice(1 + axis * 2, 3 + axis * 2), 16) - Number.parseInt(colors[index].slice(1 + axis * 2, 3 + axis * 2), 16)) * mix).toString(16).padStart(2, '0');
+  return `#${channel(0)}${channel(1)}${channel(2)}`;
+}
+function sourceLightness(color: string) { return (Number.parseInt(color.slice(1, 3), 16) * .2126 + Number.parseInt(color.slice(3, 5), 16) * .7152 + Number.parseInt(color.slice(5, 7), 16) * .0722) / 255; }
 export function compileLayer(effect: LayerDefinition): CompiledEffect {
   const cached = compiledLayers.get(effect);
   if (cached) return cached;
@@ -40,19 +44,22 @@ function buildEffect(effect: LayerDefinition): CompiledEffect {
   const tracks: StarTrack[] = [];
   const angle = effect.rotation * Math.PI / 180;
   const outline = isShape(effect.pattern) ? sampleShape(effect.pattern, effect.count) : null;
-  const character = isCharacterPattern(effect.pattern) ? sampleCharacter(effect.pattern, effect.count, effect.seed) : null;
+  const artwork = effect.artwork ? sampleArtwork(effect.artwork, effect.count, effect.seed) : null;
+  const artPalette = effect.palette;
+  const customPalette = effect.colorPalette?.mode === 'custom' ? effect.colorPalette.colors : null;
   const coloredProfiles = new Map<string, StarProfile>();
   for (let i = 0; i < effect.count; i++) {
     // An independent stream per logical star keeps random attributes stable when count changes.
     const random = randomSource(`${effect.seed}/${i}`);
     let vector: Vec3;
     let starProfile = profile;
-    if (character) {
-      vector = character[i].position;
-      const color = character[i].color;
+    if (artwork?.length) {
+      const artPoint = artwork[i];
+      vector = artPoint.position;
+      const color = customPalette ? paletteColor(customPalette, sourceLightness(artPoint.color)) : artPalette?.[artPoint.color] ?? artPoint.color;
       if (!coloredProfiles.has(color)) {
-        const tint = linearColor(color).map((channel, axis) => channel * profile.color[axis] / characterNeutralColor[axis]) as Vec3;
-        coloredProfiles.set(color, { ...profile, color: tint, finishColor: effect.star.material.finish ? profile.finishColor : tint });
+        const tint = linearColor(color);
+        coloredProfiles.set(color, { ...profile, color: tint, finishColor: artPalette || customPalette || !effect.star.material.finish ? tint : profile.finishColor });
       }
       starProfile = coloredProfiles.get(color)!;
     } else if (outline) {
@@ -67,16 +74,22 @@ function buildEffect(effect: LayerDefinition): CompiledEffect {
       const theta = i * Math.PI * (3 - Math.sqrt(5)) + (random() - 0.5) * 0.14;
       vector = [Math.cos(theta) * radius, y, Math.sin(theta) * radius];
     }
+    if (customPalette && !artwork?.length) {
+      const color = paletteColor(customPalette, (Math.atan2(vector[1], vector[0]) + Math.PI) / (Math.PI * 2));
+      const tint = linearColor(color);
+      if (!coloredProfiles.has(color)) coloredProfiles.set(color, { ...profile, color: tint, finishColor: tint });
+      starProfile = coloredProfiles.get(color)!;
+    }
     const [x, y, z] = vector;
-    const speed = preset.speed * effect.spread * (outline || character ? 1 : effect.pattern === 'ring' ? 0.985 + random() * 0.03 : 0.88 + random() * 0.24);
+    const speed = preset.speed * effect.spread * (outline || artwork?.length ? 1 : effect.pattern === 'ring' ? 0.985 + random() * 0.03 : 0.88 + random() * 0.24);
     const isBranch = effect.pattern === 'crossette';
     const track: StarTrack = {
       id: `star-${i}`, origin: [0, 0, 0],
       velocity: [(x * Math.cos(angle) + z * Math.sin(angle)) * speed, y * speed, (-x * Math.sin(angle) + z * Math.cos(angle)) * speed],
-      start: 0, life: isBranch ? SCENE.splitAt : profile.lifetime * preset.lifeFactor * (outline || character ? 0.97 + random() * 0.06 : 0.83 + random() * 0.3),
+      start: 0, life: isBranch ? SCENE.splitAt : profile.lifetime * preset.lifeFactor * (outline || artwork?.length ? 0.97 + random() * 0.06 : 0.83 + random() * 0.3),
       drag: profile.drag * preset.dragFactor * effect.dragScale, burstStrength: effect.burstStrength, burstSeconds: effect.burstSeconds, gravity: preset.gravity,
       tail: profile.tail * (isBranch ? 0.55 : preset.tailFactor), phase: random() * Math.PI * 2, profile: starProfile,
-      ...(character ? { headHeat: CHARACTER_STYLE.headHeat } : {}),
+      ...(artwork?.length ? { headHeat: .015 } : {}),
     };
     tracks.push(track);
     if (isBranch) {

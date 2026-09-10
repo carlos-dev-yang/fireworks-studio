@@ -64,10 +64,12 @@
 .canvas-area { grid-column:2; grid-row:2; position:relative; min-height:0; min-width:0; background:var(--canvas); overflow:hidden; }
 .canvas-host { width:100%; height:100%; }
 .canvas-host canvas { display:block; width:100%; height:100%; touch-action:none; }
-.viewport-top { position:absolute; top:18px; left:18px; right:18px; display:flex; justify-content:space-between; align-items:center; gap:8px; pointer-events:none; }
+.viewport-top { position:absolute; top:18px; left:18px; right:18px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; pointer-events:none; }
 .viewport-top>* { pointer-events:auto; }
 .viewport-actions { display:flex; align-items:center; gap:7px; }
-.view-options { display:flex; align-items:center; gap:7px; }
+.view-options { display:flex; align-items:center; gap:7px; flex-wrap:wrap; min-width:0; }
+.background-select { display:flex; align-items:center; gap:6px; color:#a8a6a1; font-size:11px; }
+.background-select select { min-width:118px; }
 .view-options select,.canvas-button { background:#15171bd9; border:1px solid #36383c; border-radius:6px; padding:8px 10px; font-size:12px; color:#ccc9c2; }
 .canvas-button { padding:6px; }
 .view-label { color:#ada79d; font-size:11px; display:flex; align-items:center; gap:7px; letter-spacing:.4px; }
@@ -267,14 +269,14 @@ input[type=range]::-moz-range-thumb { width:12px; height:12px; background:var(--
 .theater-mode>.app-header,.theater-mode>.library,.theater-mode>.inspector,.theater-mode>.mobile-panels { display:none; }
 .studio.theater-mode>.canvas-area { grid-column:1; grid-row:1; width:100%; height:100%; }
 .theater-mode .viewport-top { top:24px; left:28px; right:28px; }
-.theater-title { position:absolute; top:68px; left:28px; pointer-events:none; }
+.theater-title { pointer-events:none; }
+.theater-mode .viewport-top .theater-title { position:static; flex:0 0 100%; margin-top:0; }
 .theater-title h2 { font-size:20px; color:#e0d6c6; letter-spacing:-.5px; font-weight:500; }
 .theater-title p { margin-top:5px; font-size:11px; color:#8c9098; }
 .theater-mode .preview-transport { width:min(760px,calc(100% - 48px)); left:50%; right:auto; transform:translateX(-50%); bottom:24px; }
 .theater-mode .camera-hint { bottom:91px; }
 @media (max-width:800px) {
  .theater-mode .viewport-top { top:16px; left:16px; right:16px; }
- .theater-title { top:72px; left:18px; }
  .theater-title h2 { font-size:18px; }
  .theater-mode .preview-transport { width:calc(100% - 24px); gap:8px; }
  .theater-mode .view-label { font-size:10px; }

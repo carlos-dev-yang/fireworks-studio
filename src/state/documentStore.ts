@@ -2,8 +2,7 @@ import { createStore } from 'zustand/vanilla';
 import { FORMAT_VERSION, LIMITS, PATTERNS, TICK_RATE } from '../domain/catalog';
 import type { PatternId } from '../domain/catalog';
 import { createInitialShow } from '../domain/defaults';
-import { createCharacterDesign, createDesign, createLayer } from '../domain/presets';
-import type { CharacterDimension, CharacterId } from '../domain/characterCatalog';
+import { createDesign, createLayer } from '../domain/presets';
 import { parseShow } from '../domain/migration';
 import { CueSchema, FlightSchema, LayerSchema, LauncherSchema, getDesign } from '../domain/schema';
 import type { Cue, DesignOwner, FireworkDesign, Flight, LayerDefinition, LauncherDefinition, ShowDocument } from '../domain/schema';
@@ -77,7 +76,12 @@ export const documentActions = {
     updateDesign(owner, design => ({ ...design, layers: design.layers.map(layer => layer.id === layerId ? LayerSchema.parse(update(layer)) : layer) }));
   },
   setPattern(owner: DesignOwner, layerId: string, pattern: PatternId) {
-    documentActions.updateLayer(owner, layerId, layer => ({ ...layer, pattern, count: Math.min(layer.count, PATTERNS[pattern].maxCount) }));
+    documentActions.updateLayer(owner, layerId, layer => {
+      if (pattern === 'artwork' && !layer.artwork) return layer;
+      const next = { ...layer, pattern, count: Math.min(layer.count, PATTERNS[pattern].maxCount) };
+      if (pattern !== 'artwork') delete next.artwork;
+      return next;
+    });
   },
   updateFlight(owner: DesignOwner, patch: Partial<Flight>) {
     updateDesign(owner, design => ({ ...design, flight: FlightSchema.parse({ ...design.flight, ...patch }) }));
@@ -95,10 +99,6 @@ export const documentActions = {
   },
   addFirework(pattern: PatternId) {
     return documentActions.saveFirework(t(`preset.${pattern}`), createDesign(pattern, t(`preset.${pattern}`)));
-  },
-  addCharacterFirework(character: CharacterId, dimension: CharacterDimension) {
-    const name = t('character.presetName', { name: t(`character.${character}`), dimension: t(`character.${dimension}`) });
-    return documentActions.saveFirework(name, createCharacterDesign(character, dimension, part => t(part === 'halo' ? 'character.halo' : `character.part.${part}`)));
   },
   saveFirework(name: string, design: FireworkDesign) {
     if (Object.keys(documentStore.getState().document.fireworks).length >= LIMITS.fireworks) return limit(LIMITS.fireworks);
@@ -169,6 +169,7 @@ export const documentActions = {
     const launchers = { ...document.launchers }; delete launchers[id]; commit({ ...document, launchers });
   },
   deleteCue(id: string) { const document = documentStore.getState().document; if (!document.cues[id]) return; const cues = { ...document.cues }; delete cues[id]; commit({ ...document, cues }); },
+  load(document: ShowDocument) { documentActions.end(); past.length = 0; future.length = 0; documentStore.setState(state => ({ document, revision: state.revision + 1, canUndo: false, canRedo: false })); },
   replace(document: ShowDocument) { documentActions.end(); commit(document); },
   undo() { documentActions.end(); const previous = past.pop(); if (!previous) return; future.push(documentStore.getState().document); publish(previous); },
   redo() { documentActions.end(); const next = future.pop(); if (!next) return; past.push(documentStore.getState().document); publish(next); },

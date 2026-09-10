@@ -2,11 +2,13 @@
   "name": "fireworks-studio",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.19.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src"
   },
@@ -28,9 +30,11 @@
     "@vitejs/plugin-react": "6.1.1",
     "eslint": "10.10.0",
     "eslint-plugin-react-hooks": "7.1.1",
+    "fake-indexeddb": "^6.2.5",
     "typescript": "6.0.3",
     "typescript-eslint": "8.69.0",
-    "vite": "8.2.2"
+    "vite": "8.2.2",
+    "vitest": "^5.0.0"
   },
   "engines": {
     "node": ">=22.12.0"

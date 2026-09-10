@@ -1,8 +1,13 @@
-import { useRef } from 'react';
-import { Download, FolderOpen, Redo2, Undo2, Sparkles, Clapperboard } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { ArchiveRestore, Download, Folder, FolderOpen, Plus, Redo2, Sparkles, Trash2, Undo2, Clapperboard } from 'lucide-react';
 import { useStore } from 'zustand';
-import { LIMITS } from '../../domain/catalog';
-import { DocumentError, parseShow } from '../../domain/migration';
+import { ShowSchema } from '../../domain/schema';
+import { LibraryError } from '../../storage/errors';
+import { activateProject, archiveProject, artworkIdsIn, getProject, hydrateArtworkAssets, listArchivedProjects, listProjects, restoreProject, saveProject } from '../../storage/library';
+import type { StoredProject } from '../../storage/library';
+import { flushPersistence, getCurrentProjectSnapshot, persistenceStore, setPersistenceProject } from '../../app/persistence';
+import { MAX_LIBRARY_ARCHIVE_BYTES, MAX_PORTABLE_ARCHIVE_BYTES, archiveError, archiveFilename, downloadJson, exportCurrentShow, exportLibraryBackup, importShowJson } from '../../app/archiveService';
 import { documentActions, documentStore } from '../../state/documentStore';
 import { editorActions, editorStore } from '../../state/editorStore';
 import { notify } from '../../state/noticeStore';
@@ -10,34 +15,37 @@ import { NameField } from '../shared/Fields';
 import { Tip } from '../shared/Help';
 import { useRenderProbe } from '../../app/useRenderProbe';
 import { setLocale, useI18n } from '../../i18n';
+import './showManagement.css';
+
+type Run = (task: () => Promise<void>) => void;
 function ProjectName() { const name = useStore(documentStore, state => state.document.name); const { t } = useI18n(); return <NameField label={t('project.name')} value={name} onCommit={documentActions.rename} />; }
-function HistoryControls() {
-  const { t } = useI18n();
-  const canUndo = useStore(documentStore, state => state.canUndo), canRedo = useStore(documentStore, state => state.canRedo);
-  return <div className="history-controls"><Tip content="help.undo"><button className="icon-button" aria-label={t('action.undo')} disabled={!canUndo} onClick={documentActions.undo}><Undo2 size={17} /></button></Tip><Tip content="help.undo"><button className="icon-button" aria-label={t('action.redo')} disabled={!canRedo} onClick={documentActions.redo}><Redo2 size={17} /></button></Tip></div>;
+function HistoryControls() { const { t } = useI18n(); const canUndo = useStore(documentStore, state => state.canUndo), canRedo = useStore(documentStore, state => state.canRedo); return <div className="history-controls"><Tip content="help.undo"><button className="icon-button" aria-label={t('action.undo')} disabled={!canUndo} onClick={documentActions.undo}><Undo2 size={17} /></button></Tip><Tip content="help.undo"><button className="icon-button" aria-label={t('action.redo')} disabled={!canRedo} onClick={documentActions.redo}><Redo2 size={17} /></button></Tip></div>; }
+function StorageStatus() { const { t } = useI18n(); const state = useStore(persistenceStore, value => value.state); return <div className={`storage-status ${state}`}><span>{t(`storage.${state}`)}</span>{state === 'error' && <button className="text-button" onClick={() => void flushPersistence()}>{t('storage.retry')}</button>}</div>; }
+
+function FileControls({ busy, run }: { busy: boolean; run: Run }) {
+  const { t } = useI18n(); const input = useRef<HTMLInputElement>(null); const previewing = useStore(editorStore, state => !!state.transientPreview); const disabled = busy || previewing;
+  const exportShow = () => run(async () => { const document = structuredClone(documentStore.getState().document); downloadJson(await exportCurrentShow(document), archiveFilename(document.name, 'show'), MAX_PORTABLE_ARCHIVE_BYTES); notify('notice.exported'); });
+  const backup = () => run(async () => { const current = getCurrentProjectSnapshot(); downloadJson(await exportLibraryBackup(current), archiveFilename('fireworks-studio', 'library'), MAX_LIBRARY_ARCHIVE_BYTES); notify('notice.exported'); });
+  const importFile = (file: File) => run(async () => { const result = await importShowJson(file); window.dispatchEvent(new Event('fireworks-library-imported')); notify('notice.showImported', 'info', { shows: result.projects.length, presets: result.presets }); });
+  return <div className="file-controls"><input ref={input} type="file" accept=".json,application/json" hidden onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) importFile(file); }} /><Tip content="help.file"><button className="icon-button" aria-label={t('project.importShow')} disabled={disabled} onClick={() => input.current?.click()}><FolderOpen size={17} /></button></Tip><Tip content="help.file"><button className="button" aria-label={t('project.exportShow')} disabled={disabled} onClick={exportShow}><Download size={16} /><span>{t('project.exportShow')}</span></button></Tip><button className="icon-button" title={t('action.backup')} aria-label={t('action.backup')} disabled={disabled} onClick={backup}><Download size={16} /></button></div>;
 }
-function FileControls() {
-  const { t } = useI18n(); const input = useRef<HTMLInputElement>(null);
-  const save = () => {
-    documentActions.end(); const document = documentStore.getState().document;
-    const url = URL.createObjectURL(new Blob([JSON.stringify(document, null, 2)], { type: 'application/json' }));
-    const link = window.document.createElement('a'); link.href = url; link.download = `${document.name.replace(/[\\/:*?"<>|]/g, '-')}.fireworks.json`; link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000); notify('notice.exported');
-  };
-  return <div className="file-controls"><input ref={input} type="file" accept=".json,application/json" hidden aria-hidden="true" tabIndex={-1} onChange={async event => {
-    const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (!file) return;
-    if (file.size > LIMITS.importBytes) { notify('notice.largeFile', 'error'); return; }
-    try { documentActions.replace(parseShow(await file.text())); editorActions.repair(); notify('notice.imported'); }
-    catch (error) { notify(error instanceof DocumentError ? `notice.${error.code}` : 'notice.fileError', 'error'); }
-  }} />
-    <Tip content="help.file"><button className="icon-button" aria-label={t('action.import')} onClick={() => input.current?.click()}><FolderOpen size={17} /></button></Tip>
-    <Tip content="help.file"><button className="button" aria-label={t('action.export')} onClick={save}><Download size={16} /><span>{t('action.export')}</span></button></Tip>
-  </div>;
+
+function ShowManager({ projectId, onProjectChange, busy, run }: { projectId: string; onProjectChange: (project: StoredProject) => void; busy: boolean; run: Run }) {
+  const { t } = useI18n(); const [open, setOpen] = useState(false), [projects, setProjects] = useState<StoredProject[]>([]), [archived, setArchived] = useState<StoredProject[]>([]); const previewing = useStore(editorStore, state => !!state.transientPreview);
+  const refresh = () => void Promise.all([listProjects(), listArchivedProjects()]).then(([shows, trash]) => { setProjects(shows); setArchived(trash); }).catch(error => { const message = archiveError(error); notify(message.key, 'error', message.params); });
+  useEffect(() => { refresh(); window.addEventListener('fireworks-library-imported', refresh); return () => window.removeEventListener('fireworks-library-imported', refresh); }, []);
+  const flushBeforeChangingProject = async () => { await flushPersistence(); if (persistenceStore.getState().state === 'error') throw new LibraryError('conflict'); };
+  const openProject = async (id: string) => { const stored = await getProject(id); if (!stored) throw new Error('missingProject'); const document = ShowSchema.parse(stored.document); await hydrateArtworkAssets(artworkIdsIn(document)); const project = await activateProject(id); setPersistenceProject({ ...project, document }); documentActions.load(document); editorActions.repair(); onProjectChange({ ...project, document }); };
+  const switchTo = (candidate: StoredProject) => run(async () => { if (candidate.id !== projectId) { await flushBeforeChangingProject(); await openProject(candidate.id); } setOpen(false); });
+  const create = (copy: boolean) => run(async () => { await flushBeforeChangingProject(); const now = new Date().toISOString(); const document = structuredClone(documentStore.getState().document); if (copy) document.name = `${document.name} ${t('project.copy')}`; else { const launcherId = `launcher-${crypto.randomUUID()}`; document.name = t('project.default'); document.fireworks = {}; document.cues = {}; document.launchers = { [launcherId]: { id: launcherId, name: t('launcher.default', { index: 1 }), x: 0, z: 0 } }; } const saved = await saveProject({ id: `project-${crypto.randomUUID()}`, name: document.name, document, createdAt: now, updatedAt: now }); await openProject(saved.id); refresh(); setOpen(false); });
+  const discard = (candidate: StoredProject) => run(async () => { await flushBeforeChangingProject(); if (candidate.id === projectId) { const fallback = projects.find(project => project.id !== candidate.id); if (!fallback) throw new LibraryError('missingProject'); await openProject(fallback.id); } await archiveProject(candidate.id); refresh(); });
+  const stats = (project: StoredProject) => { const doc = project.document as { fireworks?: object; cues?: object }; return t('project.stats', { fireworks: Object.keys(doc.fireworks ?? {}).length, cues: Object.keys(doc.cues ?? {}).length }); };
+  const disabled = busy || previewing;
+  return <Dialog.Root open={open} onOpenChange={setOpen}><Dialog.Trigger asChild><button className="button shows-button" disabled={disabled}><Folder size={16} />{t('project.myShows', { count: projects.length })}</button></Dialog.Trigger><Dialog.Portal><Dialog.Overlay className="modal-overlay" /><Dialog.Content className="modal show-manager" aria-describedby={undefined}><div className="modal-heading"><Dialog.Title>{t('project.myShows', { count: projects.length })}</Dialog.Title><Dialog.Close asChild><button className="icon-button" aria-label={t('action.close')}>×</button></Dialog.Close></div><p className="panel-note">{t('project.managerHint')}</p><div className="show-manager-actions"><button className="button primary" disabled={disabled} onClick={() => create(false)}><Plus size={15} />{t('project.blank')}</button><button className="button" disabled={disabled} onClick={() => create(true)}>{t('project.new')}</button></div><div className="show-list">{projects.map(project => <article className="show-row" key={project.id}><div><strong>{project.name}</strong><small>{stats(project)} · {t('project.updated', { date: new Date(project.updatedAt).toLocaleDateString() })} · {project.id.slice(-6)}</small></div><div><button className="text-button" disabled={disabled || project.id === projectId} onClick={() => switchTo(project)}>{t('project.open')}</button><button className="icon-button destructive" disabled={disabled} aria-label={t('project.discard')} onClick={() => discard(project)}><Trash2 size={15} /></button></div></article>)}</div>{archived.length > 0 && <section className="trash-list"><h3>{t('project.trash')}</h3>{archived.map(project => <article className="show-row" key={project.id}><div><strong>{project.name}</strong><small>{stats(project)} · {project.id.slice(-6)}</small></div><button className="button" disabled={disabled} onClick={() => run(async () => { await restoreProject(project.id); refresh(); })}><ArchiveRestore size={14} />{t('project.restore')}</button></article>)}</section>}</Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
-export function Header() {
-  useRenderProbe('Header'); const { locale, t } = useI18n(); const page = useStore(editorStore, state => state.page);
-  return <header className="app-header"><div className="brand"><Sparkles size={22} /><h1>{t('app.title')}</h1></div><nav className="page-tabs" aria-label={t('app.subtitle')}>
-    <Tip content="help.designer"><button className={page === 'designer' ? 'active' : ''} aria-current={page === 'designer' ? 'page' : undefined} onClick={() => editorActions.setPage('designer')}><Sparkles size={15} />{t('nav.designer')}</button></Tip>
-    <Tip content="help.show"><button className={page === 'show' ? 'active' : ''} aria-current={page === 'show' ? 'page' : undefined} onClick={() => editorActions.setPage('show')}><Clapperboard size={15} />{t('nav.show')}</button></Tip>
-  </nav><div className="project-name"><ProjectName /></div><div className="header-actions"><HistoryControls /><FileControls /><select className="locale-select" aria-label={t('locale.label')} value={locale} onChange={event => setLocale(event.currentTarget.value as 'ko' | 'en')}><option value="ko">한국어</option><option value="en">English</option></select></div></header>;
+
+export function Header({ projectId, onProjectChange }: { projectId: string; onProjectChange: (project: StoredProject) => void }) {
+  useRenderProbe('Header'); const { locale, t } = useI18n(); const page = useStore(editorStore, state => state.page); const [busy, setBusy] = useState(false);
+  const run: Run = task => { if (busy) return; setBusy(true); void task().catch(error => { const message = archiveError(error); notify(message.key, 'error', message.params); }).finally(() => setBusy(false)); };
+  return <header className="app-header"><div className="brand"><Sparkles size={22} /><h1>{t('app.title')}</h1></div><nav className="page-tabs" aria-label={t('app.subtitle')}><Tip content="help.designer"><button className={page === 'designer' ? 'active' : ''} onClick={() => editorActions.setPage('designer')}><Sparkles size={15} />{t('nav.designer')}</button></Tip><Tip content="help.show"><button className={page === 'show' ? 'active' : ''} onClick={() => editorActions.setPage('show')}><Clapperboard size={15} />{t('nav.show')}</button></Tip></nav><div className="project-name"><ProjectName /></div><div className="header-actions"><ShowManager projectId={projectId} onProjectChange={onProjectChange} busy={busy} run={run} /><HistoryControls /><FileControls busy={busy} run={run} /><StorageStatus /><select className="locale-select" aria-label={t('locale.label')} value={locale} onChange={event => setLocale(event.currentTarget.value as 'ko' | 'en')}><option value="ko">한국어</option><option value="en">English</option></select></div></header>;
 }

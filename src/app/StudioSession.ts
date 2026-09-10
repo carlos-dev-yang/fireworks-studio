@@ -4,11 +4,12 @@ import { getDesign } from '../domain/schema';
 import { localeStore, t } from '../i18n';
 import { documentStore } from '../state/documentStore';
 import { editorStore } from '../state/editorStore';
+import { backgroundStore } from '../state/backgroundStore';
 import { notify } from '../state/noticeStore';
 import { ParticleEngine } from '../runtime/ParticleEngine';
 import type { SimulationEngine } from '../runtime/ParticleEngine';
 import { ThreeViewport } from '../viewport/ThreeViewport';
-import { cameraActions, playback, viewportStatus } from './services';
+import { cameraActions, fireworkAudio, playback, viewportStatus } from './services';
 
 export class StudioSession {
   private engine: SimulationEngine = new ParticleEngine();
@@ -26,6 +27,7 @@ export class StudioSession {
       playback.pause();
       viewportStatus.setState({ error: message });
     });
+    this.viewport.setBackground(backgroundStore.getState().background);
     cameraActions.bind(() => this.viewport.resetCamera());
     this.unsubscribers.push(
       documentStore.subscribe((state, previous) => {
@@ -39,11 +41,12 @@ export class StudioSession {
         this.schedule();
       }),
       editorStore.subscribe((state, previous) => {
-        if (state.page === previous.page && (state.page === 'show' || (state.editing?.kind === previous.editing?.kind && state.editing?.id === previous.editing?.id && state.previewMode === previous.previewMode && (state.previewMode === 'firework' || state.layerId === previous.layerId)))) return;
+        if (state.transientPreview === previous.transientPreview && state.page === previous.page && (state.page === 'show' || (state.editing?.kind === previous.editing?.kind && state.editing?.id === previous.editing?.id && state.previewMode === previous.previewMode && (state.previewMode === 'firework' || state.layerId === previous.layerId)))) return;
         this.reload(true);
         this.schedule();
       }),
       localeStore.subscribe(() => this.viewport.setLabel(t('preview.canvas'))),
+      backgroundStore.subscribe(state => { this.viewport.setBackground(state.background); this.schedule(); }),
       playback.subscribe(() => this.schedule()),
     );
     const visibility = () => { if (document.hidden) playback.pause(); };
@@ -61,9 +64,12 @@ export class StudioSession {
     const document = documentStore.getState().document;
     const state = editorStore.getState();
     const show = state.page === 'show';
-    const design = state.editing ? getDesign(document, state.editing) : undefined;
-    const target = show ? { kind: 'show' as const } : { kind: 'preview' as const, owner: state.editing, view: state.previewMode, layerId: state.layerId };
+    const design = state.transientPreview?.design ?? (state.editing ? getDesign(document, state.editing) : undefined);
+    const target = show ? { kind: 'show' as const } : { kind: 'preview' as const, owner: state.transientPreview ? null : state.editing, design: state.transientPreview?.design, view: state.previewMode, layerId: state.layerId };
     const duration = this.engine.load(document, target);
+    fireworkAudio.setEvents(show
+      ? Object.values(document.cues).flatMap(cue => cue.design.layers.filter(layer => layer.enabled).map((layer, index) => ({ id: `${cue.id}-${layer.id}`, burstTick: cue.atTick + Math.round((cue.design.flight.riseSeconds + layer.delaySeconds) * TICK_RATE), intensity: index === 0 ? 1 : 0.3 })))
+      : design ? design.layers.filter(layer => layer.enabled).map((layer, index) => ({ id: `preview-${layer.id}`, burstTick: Math.round((design.flight.riseSeconds + layer.delaySeconds) * TICK_RATE), intensity: index === 0 ? 1 : 0.3 })) : []);
     playback.setDuration(duration);
     this.viewport.setMode(show);
     this.viewport.setHeight(show ? Math.max(SCENE.burstHeight, ...Object.values(document.cues).map(cue => cue.design.flight.height)) : design?.flight.height ?? SCENE.burstHeight);
@@ -109,6 +115,8 @@ export class StudioSession {
     this.unsubscribers.forEach(unsubscribe => unsubscribe());
     this.viewport.dispose();
     cameraActions.bind(null);
+    fireworkAudio.setEvents([]);
+    fireworkAudio.dispose();
     viewportStatus.setState({ ready: false });
   }
 }

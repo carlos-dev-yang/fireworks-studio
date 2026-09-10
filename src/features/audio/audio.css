@@ -1,0 +1,10 @@
+.transport-audio { display:flex; align-items:center; gap:6px; }
+.transport-volume { width:72px; accent-color:var(--accent); }
+@media (max-width:800px) { .transport-volume { width:56px; } }
+@media (max-width:600px) {
+  .preview-transport { flex-wrap:wrap; gap:7px; padding:8px; }
+  .preview-transport>.transport { width:100%; justify-content:space-between; }
+  .preview-transport>.preview-scrubber { flex:0 0 100%; width:100%; }
+  .transport-volume { width:48px; }
+  .time-readout { min-width:70px; padding-left:2px; }
+}

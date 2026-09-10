@@ -1,10 +1,17 @@
 import { z } from 'zod';
 import { FORMAT_VERSION, LIMITS, MATERIALS, MODEL_VERSION, PATTERNS, TICK_RATE } from './catalog';
 import type { MaterialId, PatternId } from './catalog';
+import { IMAGE_PARTS } from './imageArt';
 const id = z.string().min(1).max(80).regex(/^[a-zA-Z0-9_-]+$/).refine(value => !['__proto__', 'constructor', 'prototype'].includes(value));
 const name = z.string().trim().min(1).max(LIMITS.nameLength);
 const scalar = (min: number, max: number) => z.number().finite().min(min).max(max);
 const range = (bounds: { min: number; max: number }) => scalar(bounds.min, bounds.max);
+const color = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+const ColorPaletteSchema = z.discriminatedUnion('mode', [
+  z.strictObject({ mode: z.literal('source') }),
+  z.strictObject({ mode: z.literal('custom'), colors: z.array(color).min(1).max(48) }),
+]);
+const ArtworkRefSchema = z.strictObject({ assetId: z.string().min(1).max(100), dimension: z.enum(['2d', '3d']), part: z.enum(IMAGE_PARTS) });
 export const StarSchema = z.strictObject({
   body: z.strictObject({ form: z.literal('sphere'), scale: range(LIMITS.size) }),
   material: z.strictObject({ base: z.enum(Object.keys(MATERIALS) as MaterialId[]), finish: z.enum(Object.keys(MATERIALS) as MaterialId[]).nullable(), transition: range(LIMITS.transition), trail: range(LIMITS.trail) }),
@@ -14,8 +21,11 @@ export const LayerSchema = z.strictObject({
   id, name, enabled: z.boolean(), pattern: z.enum(Object.keys(PATTERNS) as PatternId[]), star: StarSchema,
   count: range(LIMITS.count).int(), spread: range(LIMITS.spread), rotation: range(LIMITS.rotation),
   delaySeconds: range(LIMITS.delay), burstStrength: range(LIMITS.burst), burstSeconds: range(LIMITS.burstTime), dragScale: range(LIMITS.drag),
-  seed: z.string().min(1).max(80),
-}).refine(layer => layer.count <= PATTERNS[layer.pattern].maxCount, { path: ['count'], message: 'count' });
+  seed: z.string().min(1).max(80), palette: z.record(color, color).optional(), colorPalette: ColorPaletteSchema.optional(), artwork: ArtworkRefSchema.optional(),
+}).superRefine((layer, ctx) => {
+  if (layer.count > PATTERNS[layer.pattern].maxCount) ctx.addIssue({ code: 'custom', path: ['count'], message: 'count' });
+  if ((layer.pattern === 'artwork') !== !!layer.artwork) ctx.addIssue({ code: 'custom', path: ['artwork'], message: 'artwork' });
+});
 export const FlightSchema = z.strictObject({ height: range(LIMITS.height), riseSeconds: range(LIMITS.rise) });
 export const DesignSchema = z.strictObject({ flight: FlightSchema, layers: z.array(LayerSchema).min(1).max(LIMITS.layers) })
   .refine(design => new Set(design.layers.map(layer => layer.id)).size === design.layers.length, { message: 'duplicate' });
